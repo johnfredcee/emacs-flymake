@@ -1,8 +1,18 @@
 emacs-flymake
 =============
 
-This project is a fork of Pavel Kobyakov's excellent flymake.el to let me
-play around with some updates before contributing them upstream.
+This project is a fork of a fork Pavel Kobyakov's excellent flymake.el
+that is intended to integrate with eproject
+https://github.com/jrockway/eproject and SCons http://www.scons.org
+for my personal projects.
+
+My Notes
+========
+
+
+
+Original Notes
+==============
 
 Features added so far:
 
