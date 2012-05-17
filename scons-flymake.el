@@ -68,10 +68,44 @@
 			  "SYNTAX=1"
 			  (concat (file-name-sans-extension source) ".o"))))
 
+(defun flymake-find-scons-possible-master-files (file-name master-file-dirs masks)
+  "Find (by name and location) all possible master files.
+Master files include .cpp and .c for .h.  Files are searched for
+starting from the .h directory and max max-level parent dirs.
+File contents are not checked."
+  (flymake-log 3 "Find possible master files %s in %s" file-name master-file-dirs)
+  (let* ((dirs (mapcar (lambda (x) (expand-file-name x (eproject-root))) master-file-dirs))
+         (files  nil)
+         (done   nil))
+	(flymake-log 3 "Expanded to %s " dirs)
+    (while (and (not done) dirs)
+      (let* ((dir (car dirs))
+             (masks masks))
+		(flymake-log 3 "Looking in %s " dir)
+        (while (and (file-exists-p dir) (not done) masks)
+          (let* ((mask        (car masks))
+                 (dir-files   (directory-files dir t mask)))
+            (flymake-log 3 "dir %s, %d file(s) for mask %s"
+                         dir (length dir-files) mask)
+            (while (and (not done) dir-files)
+              (when (not (file-directory-p (car dir-files)))
+                (setq files (cons (car dir-files) files))
+                (when (>= (length files) flymake-master-file-count-limit)
+                  (flymake-log 3 "master file count limit (%d) reached" flymake-master-file-count-limit)
+                  (setq done t)))
+              (setq dir-files (cdr dir-files))))
+          (setq masks (cdr masks))))
+      (setq dirs (cdr dirs)))
+    (when files
+      (let ((flymake-included-file-name (file-name-nondirectory file-name)))
+        (setq files (sort files 'flymake-master-file-compare))))
+    (flymake-log 3 "found %d possible master file(s)" (length files))
+    files))
+
 (defun flymake-create-scons-master-file (source-file-name patched-source-file-name get-incl-dirs-f create-temp-f masks include-regexp)
   "Save SOURCE-FILE-NAME with a different name.
 Find master file, patch and save it."
-  (let* ((possible-master-files     (flymake-find-possible-master-files source-file-name (eproject-attribute :source-dirs) masks))
+  (let* ((possible-master-files     (flymake-find-scons-possible-master-files source-file-name (eproject-attribute :source-dirs) masks))
          (master-file-count         (length possible-master-files))
          (idx                       0)
          (temp-buffer               nil)
@@ -136,11 +170,11 @@ Find master file, patch and save it."
 
 
 (defun flymake-get-scons-include-dirs-imp (basedir)
-  (flymake-add-project-include-dirs-to-cache (eproject-root) '(eproject-attribute :include-dirs)))
+  (flymake-add-project-include-dirs-to-cache (eproject-root) (eproject-attribute :include-dirs)))
 
 (defun flymake-master-scons-header-init ()
   (flymake-master-scons-init
-   'flymake-get-scons-eproject-include-dirs-imp
+   'flymake-get-scons-include-dirs-imp
    '("\\.\\(?:c\\(?:pp\\|xx\\|\\+\\+\\)?\\|CC\\)\\'")
    "[ \t]*#[ \t]*include[ \t]*\"\\([[:word:]0-9/\\_.]*%s\\)\""))
 
@@ -171,7 +205,7 @@ Use CREATE-TEMP-F for creating temp copy."
 (define-project-type scons (generic) (look-for "SConstruct")
   :relevant-files ("\.cpp$" "\.h$" "\.glsl$" "\.cg$" "\.material$" "\.log$")
   :include-dirs   ("." "./include")
-  :source-dirs    ("./src"))
+  :source-dirs    ("." "./src"))
 
 (add-hook 'scons-project-file-visit-hook 
 		  '(lambda ()
