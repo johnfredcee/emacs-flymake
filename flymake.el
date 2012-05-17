@@ -641,6 +641,7 @@ Find master file, patch and save it."
          (patched-master-file-name  nil)
          (found                     nil))
 
+	(flymake-log 3 "flymake create master file %s %s " source-file-name patched-source-file-name)
     (while (and (not found) (< idx master-file-count))
       (setq master-file-name (nth idx possible-master-files))
       (setq patched-master-file-name (funcall create-temp-f master-file-name "flymake_master"))
