@@ -5,10 +5,10 @@
 ;; THIS IS A LOAD OF DINGOES KIDNEYS
 
 (defun clang-location-argument ()
-	(format "%s:%d:%d " 
-			(buffer-file-name)
-			(line-number-at-pos)
-			(1+ (- (point) (line-beginning-position)))))
+  (format "%s:%d:%d " 
+		  (buffer-file-name)
+		  (line-number-at-pos)
+		  (1+ (- (point) (line-beginning-position)))))
 
 (defun clang-completion-pattern ()
   (format "^COMPLETION: \\(%s[^\s\n:]*\\)\\(?: : \\)*\\(.*$\\)" ac-prefix))
@@ -123,7 +123,7 @@ Find master file, patch and save it."
 
 (defun flymake-master-scons-init (get-incl-dirs-f master-file-masks include-regexp)
   "Create make command line for a source file checked via master file compilation."
-  (let* ((make-args nil)
+  (let* ((scons-args nil)
 		 (temp-master-file-name (flymake-init-scons-create-temp-source-and-master-buffer-copy
 								 get-incl-dirs-f 'flymake-create-temp-inplace
 								 master-file-masks include-regexp)))
@@ -131,7 +131,7 @@ Find master file, patch and save it."
 	  (let* ((buildfile-dir (eproject-root)))
 		(if  buildfile-dir
 			(setq scons-args (flymake-get-syntax-check-program-args
-							 temp-master-file-name buildfile-dir nil nil 'flymake-get-scons-cmdline)))))
+							  temp-master-file-name buildfile-dir nil nil 'flymake-get-scons-cmdline)))))
 	scons-args))
 
 
@@ -174,21 +174,21 @@ Use CREATE-TEMP-F for creating temp copy."
   :source-dirs    ("./src"))
 
 (add-hook 'scons-project-file-visit-hook 
-	  '(lambda ()
-	     (set (make-local-variable 'sourcepair-header-path)
-		  (quote ("." ".." "../include" "./include")))
-	     (set (make-local-variable 'sourcepair-source-path)
-		  (quote ("." ".." "./src" "../src")))
-	     (set (make-local-variable 'flymake-master-file-dirs)
-			  (quote ("." "./src" ".." "../src")))
-		 (setq ac-sources '(ac-source-etags ac-source-words-in-buffer ac-source-words-in-same-mode-buffers))
-	     (set (make-local-variable 'compile-command)
-			  (format "scons -C %s %s " (eproject-root) (eproject-name)))
-		 (set (make-local-variable 'flymake-allowed-file-name-masks)
-			  '(("\\.\\(?:c\\(?:pp\\|xx\\|\\+\\+\\)?\\|CC\\)\\'" flymake-simple-scons-init)
-				("\\.\\(?:h\\(?:pp\\|xx\\|\\+\\+\\)?\\)\\'" flymake-master-scons-header-init flymake-master-cleanup)))
-		 (when (file-exists-p (concat (eproject-root) "TAGS"))
-		   (visit-tags-table (concat (eproject-root) "TAGS") t))))
+		  '(lambda ()
+			 (set (make-local-variable 'sourcepair-header-path)
+				  (quote ("." ".." "../include" "./include")))
+			 (set (make-local-variable 'sourcepair-source-path)
+				  (quote ("." ".." "./src" "../src")))
+			 (set (make-local-variable 'flymake-master-file-dirs)
+				  (quote ("." "./src" ".." "../src")))
+			 (setq ac-sources '(ac-source-etags ac-source-words-in-buffer ac-source-words-in-same-mode-buffers))
+			 (set (make-local-variable 'compile-command)
+				  (format "scons -C %s %s " (eproject-root) (eproject-name)))
+			 (set (make-local-variable 'flymake-allowed-file-name-masks)
+				  '(("\\.\\(?:c\\(?:pp\\|xx\\|\\+\\+\\)?\\|CC\\)\\'" flymake-simple-scons-init)
+					("\\.\\(?:h\\(?:pp\\|xx\\|\\+\\+\\)?\\)\\'" flymake-master-scons-header-init flymake-master-cleanup)))
+			 (when (file-exists-p (concat (eproject-root) "TAGS"))
+			   (visit-tags-table (concat (eproject-root) "TAGS") t))))
 
 
 
