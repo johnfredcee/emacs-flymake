@@ -1,6 +1,7 @@
 (require 'flymake)
 (require 'eproject)
 (require 'auto-complete)
+(require 'traverselisp)
 
 ;; THIS IS A LOAD OF DINGOES KIDNEYS
 
@@ -209,6 +210,9 @@ Use CREATE-TEMP-F for creating temp copy."
 
 (add-hook 'scons-project-file-visit-hook 
 		  '(lambda ()
+			 ;; binary is same as project name - ignore it when searching
+			 (add-to-list 'traverse-ignore-files (eproject-name))
+			 (add-to-list 'traverse-ignore-files "SConstruct")
 			 (set (make-local-variable 'sourcepair-header-path)
 				  (quote ("." ".." "../include" "./include")))
 			 (set (make-local-variable 'sourcepair-source-path)
@@ -225,6 +229,11 @@ Use CREATE-TEMP-F for creating temp copy."
 			   (visit-tags-table (concat (eproject-root) "TAGS") t))))
 
 
-
+(defun eproject-search (regexp &optional only)
+  (interactive
+   (list (traverse-read-regexp (if (fboundp 'read-regexp) "Regexp" "Regexp: "))
+		 (read-string "CheckOnly: ")))
+  (traverse-deep-rfind (eproject-root) regexp only))
+  
 
 (provide 'scons-flymake)

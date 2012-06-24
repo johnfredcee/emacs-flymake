@@ -1,15 +1,49 @@
 emacs-flymake
 =============
 
+My Notes
+========
+
 This project is a fork of a fork Pavel Kobyakov's excellent flymake.el
 that is intended to integrate with eproject
 https://github.com/jrockway/eproject and SCons http://www.scons.org
 for my personal projects.
 
-My Notes
-========
+I add the following to my SConstruct
 
+```python
+vars = Variables('custom.py')
+vars.Add(BoolVariable('SYNTAX', 'Set to 1 for a syntax check',0))
+```
 
+Then, after constructing the build environment
+
+```python
+if (env["SYNTAX"] == 1):
+	env.Append(CCFLAGS=["-fsyntax-only"])
+```
+
+And finally, before setting up the final build targets
+```python
+# needs to change - needs to get .cpp / .c file on command line and build
+if (env["SYNTAX"]==1):
+	print "Syntax checking %s " % str(COMMAND_LINE_TARGETS)
+	env.StaticObject(COMMAND_LINE_TARGETS[0], os.path.splitext(COMMAND_LINE_TARGETS[0])[0] + ".cpp")
+else:
+	# .. normal build
+```
+
+And in my .emacs  I
+
+```lisp
+(require 'eproject)
+(require 'flymake)
+(require 'scons-flymake)
+```
+
+So, now flymake will turn on in any projecct directory it finds an SConstruct. 
+It also expects and loads a TAGS file, and so autmates away a few of the setup tasks
+for a typical C++ project.
 
 Original Notes
 ==============
