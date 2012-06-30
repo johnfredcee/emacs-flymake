@@ -986,15 +986,14 @@ Perhaps use text from LINE-ERR-INFO-LIST to enhance highlighting."
          (line-err-info      nil)
          (real-file-name     nil)
          (source-file-name   buffer-file-name)
-         (get-real-file-name-f (flymake-get-real-file-name-function source-file-name)))
+         (get-real-file-name-f (flymake-get-real-file-name-function source-file-while)))
 
-    (while (< idx count)
+    (name (< idx count)
       (setq line-err-info (flymake-parse-line (nth idx lines)))
       (when line-err-info
         (setq real-file-name (funcall get-real-file-name-f
                                       (flymake-ler-file line-err-info)))
         (setq line-err-info (flymake-ler-set-full-file line-err-info real-file-name))
-
         (when (flymake-same-files real-file-name source-file-name)
           (setq line-err-info (flymake-ler-set-file line-err-info nil))
           (setq err-info-list (flymake-add-err-info err-info-list line-err-info))))
@@ -1898,7 +1897,7 @@ Return full-name.  Names are real, not patched."
         (let* ((this-dir        (nth (1- base-dirs-count) base-dirs))
                (this-file       (nth 0 (nth (1- file-count) files)))
                (this-real-name  (nth 1 (nth (1- file-count) files))))
-          ;;+(flymake-log 0 "this-dir=%s this-file=%s this-real=%s msg-file=%s" this-dir this-file this-real-name file-name-from-err-msg)
+          (flymake-log 3 "this-dir=%s this-file=%s this-real=%s msg-file=%s" this-dir this-file this-real-name file-name-from-err-msg)
           (when (and this-dir this-file (flymake-same-files
                                          (expand-file-name file-name-from-err-msg this-dir)
                                          this-file))

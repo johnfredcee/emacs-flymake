@@ -158,15 +158,16 @@ Find master file, patch and save it."
 
 (defun flymake-master-scons-init (get-incl-dirs-f master-file-masks include-regexp)
   "Create make command line for a source file checked via master file compilation."
+  (setq flymake-base-dir (eproject-root))
+  (message "Set base dir ")
   (let* ((scons-args nil)
 		 (temp-master-file-name (flymake-init-scons-create-temp-source-and-master-buffer-copy
 								 get-incl-dirs-f 'flymake-create-temp-inplace
 								 master-file-masks include-regexp)))
 	(when temp-master-file-name
 	  (let* ((buildfile-dir (eproject-root)))
-		(if  buildfile-dir
-			(setq scons-args (flymake-get-syntax-check-program-args
-							  temp-master-file-name buildfile-dir nil nil 'flymake-get-scons-cmdline)))))
+		(setq scons-args (flymake-get-syntax-check-program-args
+						  temp-master-file-name buildfile-dir nil nil 'flymake-get-scons-cmdline))))
 	scons-args))
 
 
@@ -188,11 +189,11 @@ Use CREATE-TEMP-F for creating temp copy."
   (let* ((args nil)
          (source-file-name   buffer-file-name)
          (buildfile-dir      (eproject-root)))
-    (if buildfile-dir
-        (let* ((temp-source-file-name  (flymake-init-create-temp-buffer-copy create-temp-f)))
-          (setq args (flymake-get-syntax-check-program-args temp-source-file-name buildfile-dir
+	(setq flymake-base-dir (eproject-root))
+	(let* ((temp-source-file-name  (flymake-init-create-temp-buffer-copy create-temp-f)))
+	  (setq args (flymake-get-syntax-check-program-args temp-source-file-name buildfile-dir
                                                             use-relative-base-dir use-relative-source
-                                                            get-cmdline-f))))
+                                                            get-cmdline-f)))
     args))
 
 (defun flymake-simple-scons-init ()
