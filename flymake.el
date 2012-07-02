@@ -986,9 +986,8 @@ Perhaps use text from LINE-ERR-INFO-LIST to enhance highlighting."
          (line-err-info      nil)
          (real-file-name     nil)
          (source-file-name   buffer-file-name)
-         (get-real-file-name-f (flymake-get-real-file-name-function source-file-while)))
-
-    (name (< idx count)
+         (get-real-file-name-f (flymake-get-real-file-name-function source-file-name)))
+    (while (< idx count)
       (setq line-err-info (flymake-parse-line (nth idx lines)))
       (when line-err-info
         (setq real-file-name (funcall get-real-file-name-f
