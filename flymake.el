@@ -756,7 +756,7 @@ It's flymake process filter."
     (setq flymake-check-start-time nil)
 
     (if (and (equal 0 err-count) (equal 0 warn-count) (equal 0 info-count))
-        (if (equal 0 exit-status)
+;;        (if (equal 0 exit-status)
             (flymake-report-status "" "")        ; PASSED
           (if (not flymake-check-was-interrupted)
               (flymake-report-fatal-status "CFGERR"
@@ -1889,14 +1889,12 @@ Return full-name.  Names are real, not patched."
   (let* ((base-dirs-count  (length base-dirs))
          (file-count       (length files))
          (real-name        nil))
-
     (while (and (not real-name) (> base-dirs-count 0))
       (setq file-count (length files))
       (while (and (not real-name) (> file-count 0))
         (let* ((this-dir        (nth (1- base-dirs-count) base-dirs))
                (this-file       (nth 0 (nth (1- file-count) files)))
                (this-real-name  (nth 1 (nth (1- file-count) files))))
-          (flymake-log 3 "this-dir=%s this-file=%s this-real=%s msg-file=%s" this-dir this-file this-real-name file-name-from-err-msg)
           (when (and this-dir this-file (flymake-same-files
                                          (expand-file-name file-name-from-err-msg this-dir)
                                          this-file))

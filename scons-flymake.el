@@ -159,7 +159,6 @@ Find master file, patch and save it."
 (defun flymake-master-scons-init (get-incl-dirs-f master-file-masks include-regexp)
   "Create make command line for a source file checked via master file compilation."
   (setq flymake-base-dir (eproject-root))
-  (message "Set base dir ")
   (let* ((scons-args nil)
 		 (temp-master-file-name (flymake-init-scons-create-temp-source-and-master-buffer-copy
 								 get-incl-dirs-f 'flymake-create-temp-inplace
