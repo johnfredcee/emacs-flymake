@@ -758,10 +758,10 @@ It's flymake process filter."
     (if (and (equal 0 err-count) (equal 0 warn-count) (equal 0 info-count))
 ;;        (if (equal 0 exit-status)
             (flymake-report-status "" "")        ; PASSED
-          (if (not flymake-check-was-interrupted)
-              (flymake-report-fatal-status "CFGERR"
-                                           (format "Configuration error has occurred while running %s" command))
-            (flymake-report-status nil ""))) ; "STOPPED"
+          ;; (if (not flymake-check-was-interrupted)
+          ;;     (flymake-report-fatal-status "CFGERR"
+          ;;                                  (format "Configuration error has occurred while running %s" command))
+          ;;   (flymake-report-status nil ""))) ; "STOPPED"
       (flymake-report-status (format "%d/%d/%d" err-count warn-count info-count) "")))
   (run-hooks 'flymake-after-syntax-check-hook))
 
