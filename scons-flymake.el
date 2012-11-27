@@ -63,11 +63,13 @@
 ;; making .h files --------------------
 
 (defun flymake-get-scons-cmdline (source base-dir)
-  (list "scons"
-		(list "-suC"
-			  (expand-file-name base-dir)
-			  "SYNTAX=1"
-			  (concat (file-name-sans-extension source) ".o"))))
+  (list "c:\\python27\\python.exe"
+		(list 
+		 "c:\\Python27\\scripts\\scons.py"
+		 "-suC"
+		 (expand-file-name base-dir)
+		 "SYNTAX=1"
+		 (concat (file-name-sans-extension source) ".obj"))))
 
 (defun flymake-find-scons-possible-master-files (file-name master-file-dirs masks)
   "Find (by name and location) all possible master files.
@@ -204,9 +206,9 @@ Use CREATE-TEMP-F for creating temp copy."
 ;; c-sources in its src/ directory and headers in it's include/ directory
 
 (define-project-type scons (generic) (look-for "SConstruct")
-  :relevant-files ("\.cpp$" "\.h$" "\.glsl$" "\.cg$" "\.material$" "\.log$")
-  :include-dirs   ("." "./include")
-  :source-dirs    ("." "./src"))
+  :relevant-files ("\.cpp$" "\.c$" "\.h$" "\.glsl$" "\.cg$" "\.material$" "\.log$")
+  :include-dirs   ("." "./include"  "./Inc" )
+  :source-dirs    ("." "./Src" ))
 
 (add-hook 'scons-project-file-visit-hook 
 		  '(lambda ()
@@ -214,14 +216,14 @@ Use CREATE-TEMP-F for creating temp copy."
 			 (add-to-list 'traverse-ignore-files (eproject-name))
 			 (add-to-list 'traverse-ignore-files "SConstruct")
 			 (set (make-local-variable 'sourcepair-header-path)
-				  (quote ("." ".." "../include" "./include")))
+				  (quote ("." ".." "../include" "./include" "./Inc" "../Inc")))
 			 (set (make-local-variable 'sourcepair-source-path)
 				  (quote ("." ".." "./src" "../src")))
 			 (set (make-local-variable 'flymake-master-file-dirs)
 				  (quote ("." "./src" ".." "../src")))
 			 (setq ac-sources '(ac-source-etags ac-source-words-in-buffer ac-source-words-in-same-mode-buffers))
 			 (set (make-local-variable 'compile-command)
-				  (format "scons -C %s %s " (eproject-root) (eproject-name)))
+				  (format "c:\\python27\\python.exe c:\\Python27\\scripts\\scons.py -C %s %s " (eproject-root) (eproject-name)))
 			 (set (make-local-variable 'flymake-allowed-file-name-masks)
 				  '(("\\.\\(?:c\\(?:pp\\|xx\\|\\+\\+\\)?\\|CC\\)\\'" flymake-simple-scons-init)
 					("\\.\\(?:h\\(?:pp\\|xx\\|\\+\\+\\)?\\)\\'" flymake-master-scons-header-init flymake-master-cleanup)))
