@@ -59,18 +59,42 @@
 ;; END DINGOES KIDNEYS
 
 
-
 ;; making .h files --------------------
 
 (defun flymake-get-scons-cmdline (source base-dir)
-  (list "c:\\python27\\python.exe"
-		(list 
-		 "c:\\Python27\\scripts\\scons.py"
-		 "-suC"
-		 (expand-file-name base-dir)
-		 "SYNTAX=1"
-		 (concat (file-name-sans-extension source) ".obj"))))
+  (if (eq system-type 'windows-nt)
+	  (list "c:\\python27\\python.exe"
+			(list 
+			 "c:\\Python27\\scripts\\scons.py"
+			 "-suC"
+			 (expand-file-name base-dir)
+			 "SYNTAX=1"
+			 (concat (file-name-sans-extension source) ".obj")))
+	(list "scons"
+		  (list
+		   "-suC"
+		   (expand-file-name base-dir)
+		   "SYNTAX=1"
+		   (concat (file-name-sans-extension source) ".o")))))
 
+
+
+
+(defun flymake-find-eproject-possible-master-files (file-name master-file-dirs masks)
+  (flymake-log 3 "Find possible master files %s in %s" file-name master-file-dirs)
+  (let* ((base-file (file-name-nondirectory (buffer-file-name)))
+		(other-buffer-files
+		 (delq nil
+			   (mapcar 
+				(lambda (x) (and 
+							 (equal (file-name-nondirectory (file-name-sans-extension x)) (file-name-sans-extension buffer-file)) 
+							 (not (equal (file-name-nondirectory x) buffer-file))   
+							 x))
+				(eproject-list-project-files)))))
+		(flymake-log 3 "found %d possible master file(s)" (length other-buffer-files))
+		other-buffer-files))
+	
+  
 (defun flymake-find-scons-possible-master-files (file-name master-file-dirs masks)
   "Find (by name and location) all possible master files.
 Master files include .cpp and .c for .h.  Files are searched for
@@ -108,7 +132,7 @@ File contents are not checked."
 (defun flymake-create-scons-master-file (source-file-name patched-source-file-name get-incl-dirs-f create-temp-f masks include-regexp)
   "Save SOURCE-FILE-NAME with a different name.
 Find master file, patch and save it."
-  (let* ((possible-master-files     (flymake-find-scons-possible-master-files source-file-name (eproject-attribute :source-dirs) masks))
+  (let* ((possible-master-files     (flymake-find-eproject-possible-master-files source-file-name (eproject-attribute :source-dirs) masks))
          (master-file-count         (length possible-master-files))
          (idx                       0)
          (temp-buffer               nil)
@@ -201,34 +225,45 @@ Use CREATE-TEMP-F for creating temp copy."
   (flymake-simple-scons-init-impl 'flymake-create-temp-inplace t t "SConstruct" '
 								  flymake-get-scons-cmdline))
 
+;; a convienence function that lets us switch between source/header files in a project
+(defun buffer-other-eproject-files ()
+ (interactive)
+ (let* 
+  ((buffer-file (file-name-nondirectory (buffer-file-name)))
+   (other-buffer-files
+    (delq nil
+          (mapcar (lambda (x) (and 
+                               (equal (file-name-nondirectory (file-name-sans-extension x)) (file-name-sans-extension buffer-file)) 
+                               (not (equal (file-name-nondirectory x) buffer-file))   
+                               x)) (eproject-list-project-files)))))
+  (when (> (length other-buffer-files) 0)
+    ;; TO DO : Possibly prompt if there is more than one..
+    (find-file (car other-buffer-files)))))
 
 ;; An SCons project has an SConstruct file in it's root directory
-;; c-sources in its src/ directory and headers in it's include/ directory
-
 (define-project-type scons (generic) (look-for "SConstruct")
   :relevant-files ("\.cpp$" "\.c$" "\.h$" "\.glsl$" "\.cg$" "\.material$" "\.log$")
-  :include-dirs   ("." "./include"  "./Inc" )
-  :source-dirs    ("." "./Src" ))
+  :include-dirs   (".")
+  :source-dirs    ("."))
 
 (add-hook 'scons-project-file-visit-hook 
 		  '(lambda ()
 			 ;; binary is same as project name - ignore it when searching
 			 (add-to-list 'traverse-ignore-files (eproject-name))
 			 (add-to-list 'traverse-ignore-files "SConstruct")
-			 (set (make-local-variable 'sourcepair-header-path)
-				  (quote ("." ".." "../include" "./include" "./Inc" "../Inc")))
-			 (set (make-local-variable 'sourcepair-source-path)
-				  (quote ("." ".." "./src" "../src")))
 			 (set (make-local-variable 'flymake-master-file-dirs)
 				  (quote ("." "./src" ".." "../src")))
-			 (setq ac-sources '(ac-source-etags ac-source-words-in-buffer ac-source-words-in-same-mode-buffers))
+			 (local-set-key [(control c) t] 'buffer-other-eproject-files)	 
 			 (set (make-local-variable 'compile-command)
-				  (format "c:\\python27\\python.exe c:\\Python27\\scripts\\scons.py -C %s %s " (eproject-root) (eproject-name)))
+				  (if (eq system-type 'windows-nt)
+					  (format "c:\\python27\\python.exe c:\\Python27\\scripts\\scons.py -C %s %s " (eproject-root) (eproject-name))
+					(format "scons -C %s %s" (eproject-root) (eproject-name))))
 			 (set (make-local-variable 'flymake-allowed-file-name-masks)
 				  '(("\\.\\(?:c\\(?:pp\\|xx\\|\\+\\+\\)?\\|CC\\)\\'" flymake-simple-scons-init)
 					("\\.\\(?:h\\(?:pp\\|xx\\|\\+\\+\\)?\\)\\'" flymake-master-scons-header-init flymake-master-cleanup)))
 			 (when (file-exists-p (concat (eproject-root) "TAGS"))
-			   (visit-tags-table (concat (eproject-root) "TAGS") t))))
+			   (visit-tags-table (concat (eproject-root) "TAGS") t)
+			   (add-to-list 'ac-sources 'ac-source-etags))))
 
 
 (defun eproject-search (regexp &optional only)
